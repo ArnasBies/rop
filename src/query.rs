@@ -14,8 +14,6 @@ enum Operation{
     List,
     Remove,
     Extract(String),
-    Cut,
-    Paste,
     Copy(PathBuf),
 }
 
@@ -31,8 +29,6 @@ impl GetOperation for String{
             "list" => Operation::List,
             "remove" => Operation::Remove,
             "extract" => Operation::Extract(String::new()),
-            "cut" => Operation::Cut,
-            "paste" => Operation::Paste,
             "copy" => Operation::Copy(PathBuf::new()),
             _ => panic!("invalid operation"),
         }

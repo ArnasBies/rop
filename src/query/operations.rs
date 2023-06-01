@@ -10,7 +10,7 @@ impl Query{
         };
 
         let expression: String = match operation{
-            Operation::Help | Operation::Paste => "".to_string(),
+            Operation::Help => "".to_string(),
             _ => match args.get(2){
                 Some(x) => x.to_string(),
                 None => panic!("couldn't parse regex expression"),
@@ -20,7 +20,7 @@ impl Query{
         let mut item_path = PathBuf::new();
 
         match operation{
-            Operation::Help | Operation::Paste => {},
+            Operation::Help => {},
             _ => match args.get(3){
                 Some(x) => item_path.push(x.clone().to_string()),
                 None => panic!("couldn't parse regex expression"),
@@ -49,18 +49,22 @@ impl Query{
         match &self.op{
             Operation::Help => help(),
             Operation::Move(x) => move_files(self, x),
-            Operation::Cut => cut(self),
             Operation::List => list(self),
             Operation::Remove => remove(self),
             Operation::Extract(x) => extract(self, x),
-            Operation::Paste => paste(self),
             Operation::Copy(x) => copy(self, x),
         }
     }
 }
 
 pub fn help(){
-
+    println!("\trop has 6 operations: Help, Move, List, Remove, Extract, Copy");
+    println!("\t\tHelp: usage 'rop help', gives information about all operations");
+    println!("\t\tMove: usage 'rop move \'{{regex expression}}\' {{from which path}} {{to which path}}', moves all of the files caught by the regex expression into the specified directory");
+    println!("\t\tList: usage 'rop list \'{{regex expression}}\' {{from which path}}', lists all of the files caught by the regex expression");
+    println!("\t\tRemove: usage 'rop remove \'{{regex expression}}\' {{from which path}}', removes all of the files caught by the regex expression");
+    println!("\t\tExtract: usage 'rop extract \'{{regex expression}}\' {{from which path}} {{extraction folder name}}', moves all of the files caught by the regex expression into a folder in the same directory");
+    println!("\t\tCopy: usage 'rop copy \'{{regex expression}}\' {{from which path}} {{to which path}}', copies all of the files caught by the regex expression into the specified directory");
 }
 
 pub fn move_files(query: &Query, item_path: &PathBuf){
@@ -75,18 +79,16 @@ pub fn move_files(query: &Query, item_path: &PathBuf){
             if expression.is_match(path_and_name.1.clone().to_str().unwrap()){
                 let mut move_path = item_path.clone();
                 move_path.push(path_and_name.1.clone().to_str().unwrap());
-                
-                match fs::rename(path_and_name.0, move_path){
-                    Ok(_) => println!("successfully moved file: {} to {}", path_and_name.1.clone().to_str().unwrap(), &item_path.to_str().unwrap()),
-                    Err(_) => println!("failed to move file: {} to {}", path_and_name.1.clone().to_str().unwrap(), &item_path.to_str().unwrap()),
-                };
+
+                if path_and_name.1.clone() != item_path.clone().file_name().unwrap(){
+                    match fs::rename(path_and_name.0, move_path){
+                        Ok(_) => println!("successfully moved file: {} to {}", path_and_name.1.clone().to_str().unwrap(), &item_path.to_str().unwrap()),
+                        Err(_) => println!("failed to move file: {} to {}", path_and_name.1.clone().to_str().unwrap(), &item_path.to_str().unwrap()),
+                    };
+                }
             };
         }
     }
-}
-
-pub fn cut(query: &Query){
-
 }
 
 pub fn remove(query: &Query){
@@ -106,10 +108,6 @@ pub fn remove(query: &Query){
             };
         }
     }
-}
-
-pub fn paste(query: &Query){
-
 }
 
 pub fn copy(query: &Query, item_path: &PathBuf){
@@ -154,6 +152,8 @@ pub fn extract(query: &Query, folder_name: &String){
     let mut new_path = query.item_path.clone();
     new_path.push(folder_path);
 
-    fs::create_dir(&new_path).expect("couldn't create new directory here");
+    if !new_path.exists(){
+        fs::create_dir(&new_path).expect("couldn't create new directory here");
+    }
     move_files(query, &new_path);
 }
