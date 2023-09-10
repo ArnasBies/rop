@@ -23,7 +23,7 @@ trait GetOperation{
 
 impl GetOperation for String{
     fn to_operation(&self) -> Operation {
-        return match self.as_str(){
+        return match self.to_lowercase().as_str(){
             "help" => Operation::Help,
             "move" => Operation::Move(PathBuf::new()),
             "list" => Operation::List,
